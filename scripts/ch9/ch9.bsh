@@ -1,0 +1,19 @@
+#!/bin/bash
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 SID"
+  exit 1
+fi
+# source oracle OS variables
+. /var/opt/oracle/oraset $1
+#
+BOX=`uname -a | awk '{print$2}'`
+OUTFILE=$HOME/bin/log/sqladvice.txt
+#
+sqlplus -s <<EOF
+mv_maint/foo
+SPO $OUTFILE
+SET LINESIZE 80 PAGESIZE 0 LONG 100000
+SELECT DBMS_AUTO_SQLTUNE.REPORT_AUTO_TUNING_TASK FROM DUAL;
+EOF
+cat $OUTFILE | mailx -s "SQL Advice: $1 $BOX" larry@oracle.com
+exit 0
